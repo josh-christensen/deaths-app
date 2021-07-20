@@ -33,6 +33,12 @@ ui <- fluidPage(
                                "State",
                                choices = c("United States",sort(unique(deaths$State))[-45]),
                                selected = "United States"),
+            checkboxInput("mult", "Add States"),
+                conditionalPanel(
+                    condition = "input.mult == true",
+                    numericInput("statenum",NULL,1,width = "18%"),
+                    uiOutput("extraStates")
+                ),
             selectInput("variable",
                         "Variable of Interest",
                         choices = c("Age-adjusted Death Rate","Number of Deaths","Proportionality of Deaths"),
@@ -58,7 +64,22 @@ server <- function(input, output) {
     for(i in 1:nrow(deaths)){
         deaths$propdeaths[i] <- deaths$Deaths[i]/(deaths$Deaths[deaths$Year==deaths$Year[i] & deaths$State==deaths$State[i] & deaths$Cause=="All causes"])
     }
-
+    
+    # Define UI for added states
+    reactive({
+        if(exists(input$statenum)){
+            state.number <- input$statenum
+            v <- list()
+            for (i in 1:state.number){
+            v[[i]] <- selectInput(paste0("state",i),
+                                  paste("State",i),
+                                  choices = c("United States",sort(unique(deaths$State))[-45]),
+                                  selected = "United States")
+            }
+            output$extraStates <- renderUI(v)
+        }
+    })
+    
     output$distPlot <- renderPlot({
         # generate plot based on input$states from ui.R
         p <- ggplot(deaths[deaths$Cause %in% input$causes & deaths$State %in% input$states,],aes(x = Year))
