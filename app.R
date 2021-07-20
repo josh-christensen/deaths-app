@@ -36,7 +36,7 @@ ui <- fluidPage(
             checkboxInput("mult", "Add States"),
                 conditionalPanel(
                     condition = "input.mult == true",
-                    numericInput("statenum",NULL,1,width = "18%"),
+                    numericInput("statenum",NULL,1,width = "18%",min = 1,max = 50),
                     uiOutput("extraStates")
                 ),
             selectInput("variable",
@@ -66,14 +66,17 @@ server <- function(input, output) {
     }
     
     # Define UI for added states
-            v <- list()
-            for (i in 1:2){
-            v[[i]] <- selectInput(paste0("state",i),
-                                  paste("State",i),
-                                  choices = c("United States",sort(unique(deaths$State))[-45]),
-                                  selected = "United States")
-            }
-            output$extraStates <- renderUI(v)
+    output$extraStates <- renderUI({
+        v <- list()
+        for (i in 2:(input$statenum+1)){
+        v[[i]] <- selectInput(paste0("state",i),
+                              paste("State",i),
+                              choices = c("United States",sort(unique(deaths$State))[-45]),
+                              selected = "United States")
+        }
+        v
+    })
+
 
     
     output$distPlot <- renderPlot({
