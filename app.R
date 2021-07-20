@@ -66,19 +66,15 @@ server <- function(input, output) {
     }
     
     # Define UI for added states
-    reactive({
-        if(exists(input$statenum)){
-            state.number <- input$statenum
             v <- list()
-            for (i in 1:state.number){
+            for (i in 1:2){
             v[[i]] <- selectInput(paste0("state",i),
                                   paste("State",i),
                                   choices = c("United States",sort(unique(deaths$State))[-45]),
                                   selected = "United States")
             }
             output$extraStates <- renderUI(v)
-        }
-    })
+
     
     output$distPlot <- renderPlot({
         # generate plot based on input$states from ui.R
