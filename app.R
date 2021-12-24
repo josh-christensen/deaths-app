@@ -8,6 +8,7 @@
 #
 
 library(shiny)
+library(shinythemes)
 library(readr)
 library(ggplot2)
 
@@ -18,9 +19,11 @@ deaths <- deaths[deaths$Year != 2016,]
 
 # Define UI for application that draws a line graph
 ui <- fluidPage(
+    
+    theme = shinytheme("cosmo"),
 
     # Application title
-    titlePanel("U.S. Cause of Death Data (1999-2015)"),
+    titlePanel("U.S. Cause of Death Trends (1999-2015)"),
 
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
@@ -36,15 +39,14 @@ ui <- fluidPage(
             checkboxInput("mult", "Add States"),
                 conditionalPanel(
                     condition = "input.mult == true",
-                    numericInput("statenum",NULL,1,width = "18%",min = 1,max = 50),
+                    numericInput("statenum",NULL,0,width = "18%",min = 0,max = 50),
                     uiOutput("extraStates")
                 ),
             selectInput("variable",
                         "Variable of Interest",
                         choices = c("Age-adjusted Death Rate","Number of Deaths","Proportionality of Deaths"),
                         selected = "Age-adjusted Death Rate")
-            # TODO For multiple states input: text input, check box to add drop-down, input box with how many drop downs
-            # TODO add an option that shows all 50 states and/or all causes separately
+            # TODO make a checkbox grid for selecting multiple states
         ),
 
         # Show a plot of the generated distribution
@@ -67,28 +69,36 @@ server <- function(input, output) {
     
     # Define UI for added states
     output$extraStates <- renderUI({
-        v <- list()
-        for (i in 2:(input$statenum+1)){
-        v[[i]] <- selectInput(paste0("state",i),
-                              paste("State",i),
-                              choices = c("United States",sort(unique(deaths$State))[-45]),
-                              selected = "United States")
+        if(input$statenum > 0){
+            v <- list()
+            for (i in 2:(input$statenum+1)){
+            v[[i]] <- selectInput(paste0("state",i),
+                                  paste("State",i),
+                                  choices = c("United States",sort(unique(deaths$State))[-45]),
+                                  selected = "United States")
+            }
+            v
         }
-        v
     })
 
 
     
     output$distPlot <- renderPlot({
+        states <- input$states
+        for(i in 2:(input$statenum+1)){
+            var <- paste0("state",i)
+            states <- append(states,input[[var]])
+        }
         # generate plot based on input$states from ui.R
-        p <- ggplot(deaths[deaths$Cause %in% input$causes & deaths$State %in% input$states,],aes(x = Year))
+        p <- ggplot(deaths[deaths$Cause %in% input$causes & deaths$State %in% states,],aes(x = Year, color = State)) + theme(legend.text=element_text(size=12),
+                                                                                                                             legend.title=element_text(size=15))
         
         if(input$variable == "Number of Deaths"){
-            p <- p  + geom_line(aes(y = Deaths))
+            p <- p  + geom_line(aes(y = Deaths),lwd = 2)
         }else if(input$variable == "Age-adjusted Death Rate"){
-            p <- p + geom_line(aes(y = Age.adj.Death.Rate)) + ylab("Age-adjusted Death Rate (per 100,000)")
+            p <- p + geom_line(aes(y = Age.adj.Death.Rate),lwd = 2) + ylab("Age-adjusted Death Rate (per 100,000)")
         }else if(input$variable == "Proportionality of Deaths"){
-            p <- p + geom_line(aes(y = propdeaths)) + ylab("Proportionality of Deaths")
+            p <- p + geom_line(aes(y = propdeaths),lwd = 2) + ylab("Proportionality of Deaths")
         }
         print(p)
     })
@@ -96,7 +106,6 @@ server <- function(input, output) {
 
 # Remove extra variables
 rm(deaths)
-
 
 # Run the application 
 shinyApp(ui = ui, server = server)

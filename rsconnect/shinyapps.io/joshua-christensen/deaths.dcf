@@ -5,7 +5,7 @@ account: joshua-christensen
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 4346961
-bundleId: 4804938
+bundleId: 4839979
 url: https://joshua-christensen.shinyapps.io/deaths/
-when: 1625869272.99903
-lastSyncTime: 1625869272.99903
+when: 1626836666.74951
+lastSyncTime: 1626836666.74951
